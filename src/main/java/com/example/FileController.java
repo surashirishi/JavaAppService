@@ -3,6 +3,8 @@ package com.example;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +19,10 @@ public class FileController {
     
     @GetMapping("/")
     public String home() {
-        return "Java App Service is running! Use POST /copy-file to perform file operations.";
+        return "Java App Service is running! Use GET or POST /copy-file to perform file operations.";
     }
     
-    @PostMapping("/copy-file")
+    @RequestMapping(value = "/copy-file", method = {RequestMethod.GET, RequestMethod.POST})
     public String copyFile() {
         try {
             logger.info("File copy operation requested");
