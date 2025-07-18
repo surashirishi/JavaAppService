@@ -46,13 +46,15 @@ public class FileService {
             
             // Write "test" content to the file
             String content = "test";
+            logger.info("Starting upload of test.txt to local area: {}", targetFile);
             Files.write(targetFile, content.getBytes(), StandardOpenOption.CREATE);
-            logger.info("Successfully wrote content '{}' to file: {}", content, targetFile);
+            logger.info("Successfully uploaded test.txt to local area with content '{}' at: {}", content, targetFile);
             
             // Read the content back and log it
             if (Files.exists(targetFile)) {
+                logger.info("Starting to read contents of test.txt from local area: {}", targetFile);
                 String readContent = Files.readString(targetFile);
-                logger.info("Content read from {}: '{}'", targetFile, readContent);
+                logger.info("Successfully read test.txt contents from local area: '{}' (File: {})", readContent, targetFile);
             } else {
                 logger.error("File not found after writing: {}", targetFile);
             }
@@ -90,10 +92,11 @@ public class FileService {
             }
             
             // Append the content to the file
+            logger.info("Starting periodic upload of test.txt to local area: {}", targetFile);
             Files.write(targetFile, (content + System.lineSeparator()).getBytes(), 
                        StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             
-            logger.info("Periodic write #{}: '{}' to file: {}", writeCounter, content, targetFile);
+            logger.info("Successfully uploaded test.txt to local area - Periodic write #{}: '{}' at: {}", writeCounter, content, targetFile);
             
         } catch (IOException e) {
             logger.error("Error during periodic file writing: {}", e.getMessage(), e);
