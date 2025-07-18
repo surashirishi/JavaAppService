@@ -97,3 +97,32 @@ The tests verify:
 - Application startup
 - File operations functionality
 - Error handling
+
+## GitHub Actions Deployment
+
+This repository includes a GitHub Actions workflow for automated deployment to Azure App Service. The workflow:
+
+- Triggers on push to main branch and pull requests
+- Builds the application with Maven
+- Runs tests to ensure code quality
+- Deploys to Azure App Service (main branch only)
+
+### Setup
+
+To enable deployment, configure the following secrets in your GitHub repository:
+
+1. **AZURE_WEBAPP_NAME**: Your Azure App Service name
+2. **AZURE_WEBAPP_PUBLISH_PROFILE**: The publish profile content from your Azure App Service
+
+To get the publish profile:
+1. Go to your Azure App Service in the Azure Portal
+2. Click "Get publish profile" in the Overview section
+3. Copy the entire XML content and paste it as the secret value
+
+### Workflow Features
+
+- **Automatic builds**: Every push and pull request triggers a build
+- **Test execution**: All tests run before deployment
+- **Dependency caching**: Maven dependencies are cached for faster builds
+- **Artifact storage**: Built JAR files are stored as artifacts for 90 days
+- **Secure deployment**: Only pushes to main branch trigger deployment
