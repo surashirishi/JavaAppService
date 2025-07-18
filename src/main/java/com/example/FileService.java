@@ -1,28 +1,31 @@
 package com.example;
 
 import org.springframework.stereotype.Service;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.*;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 public class FileService {
     
     private static final Logger logger = LoggerFactory.getLogger(FileService.class);
-    private int writeCounter = 0;
-    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     
     /**
-     * Copies a test.txt file with content "test" to %SystemDrive%\local directory
-     * and reads back the content to log it.
+     * Copies test.txt from %HOME%\site\wwwroot to %SystemDrive%\local directory
+     * and reads the content to log it.
      */
     public void copyFileAndReadContent() {
         try {
+            // Get HOME environment variable
+            String homeDir = System.getenv("HOME");
+            if (homeDir == null) {
+                // Fallback for development - try user.home
+                homeDir = System.getProperty("user.home");
+                logger.warn("HOME environment variable not found. Using user.home: {}", homeDir);
+            }
+            
             // Get the system drive (typically C: on Windows)
             String systemDrive = System.getenv("SystemDrive");
             if (systemDrive == null) {
@@ -31,72 +34,70 @@ public class FileService {
                 logger.warn("SystemDrive environment variable not found. Using user.home: {}", systemDrive);
             }
             
-            // Create the local directory path
-            Path localDir = Paths.get(systemDrive, "local");
-            Path targetFile = localDir.resolve("test.txt");
+            // Define source and target paths
+            Path sourcePath = Paths.get(homeDir, "site", "wwwroot", "test.txt");
+            Path targetDir = Paths.get(systemDrive, "local");
+            Path targetPath = targetDir.resolve("test.txt");
             
-            logger.info("Target directory: {}", localDir);
-            logger.info("Target file: {}", targetFile);
+            logger.info("Source file: {}", sourcePath);
+            logger.info("Target directory: {}", targetDir);
+            logger.info("Target file: {}", targetPath);
             
-            // Create the directory if it doesn't exist
-            if (!Files.exists(localDir)) {
-                Files.createDirectories(localDir);
-                logger.info("Created directory: {}", localDir);
+            // Ensure the source file exists (create it if needed)
+            ensureSourceFileExists(sourcePath);
+            
+            // Create the target directory if it doesn't exist
+            if (!Files.exists(targetDir)) {
+                Files.createDirectories(targetDir);
+                logger.info("Created target directory: {}", targetDir);
             }
             
-            // Write "test" content to the file
-            String content = "test";
-            Files.write(targetFile, content.getBytes(), StandardOpenOption.CREATE);
-            logger.info("Successfully wrote content '{}' to file: {}", content, targetFile);
+            // Copy the file from source to target
+            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Successfully copied file from {} to {}", sourcePath, targetPath);
             
             // Read the content back and log it
-            if (Files.exists(targetFile)) {
-                String readContent = Files.readString(targetFile);
-                logger.info("Content read from {}: '{}'", targetFile, readContent);
+            if (Files.exists(targetPath)) {
+                String readContent = Files.readString(targetPath);
+                logger.info("Content read from target file {}: '{}'", targetPath, readContent);
             } else {
-                logger.error("File not found after writing: {}", targetFile);
+                logger.error("Target file not found after copying: {}", targetPath);
             }
             
         } catch (IOException e) {
-            logger.error("Error during file operations: {}", e.getMessage(), e);
-            throw new RuntimeException("File operation failed", e);
+            logger.error("Error during file copy operation: {}", e.getMessage(), e);
+            throw new RuntimeException("File copy operation failed", e);
         }
     }
     
     /**
-     * Scheduled method that writes to test.txt every 10 minutes.
-     * Writes "test-writing: {n} at {書き込み時間}" where n is the write count.
+     * Ensures the source file exists in %HOME%\site\wwwroot\test.txt
+     * If it doesn't exist, creates it from the bundled resource file.
      */
-    @Scheduled(fixedRate = 600000) // 10 minutes in milliseconds (10 * 60 * 1000 = 600,000)
-    public void writePeriodicTestData() {
-        try {
-            writeCounter++;
-            String currentTime = LocalDateTime.now().format(timeFormatter);
-            String content = String.format("test-writing: %d at %s", writeCounter, currentTime);
-            
-            // Get the system drive or user home directory
-            String systemDrive = System.getenv("SystemDrive");
-            if (systemDrive == null) {
-                systemDrive = System.getProperty("user.home");
+    private void ensureSourceFileExists(Path sourcePath) throws IOException {
+        if (!Files.exists(sourcePath)) {
+            // Create the directory structure if needed
+            Path sourceDir = sourcePath.getParent();
+            if (!Files.exists(sourceDir)) {
+                Files.createDirectories(sourceDir);
+                logger.info("Created source directory: {}", sourceDir);
             }
             
-            // Create the local directory path
-            Path localDir = Paths.get(systemDrive, "local");
-            Path targetFile = localDir.resolve("test.txt");
-            
-            // Create the directory if it doesn't exist
-            if (!Files.exists(localDir)) {
-                Files.createDirectories(localDir);
+            // Copy the test.txt from resources to the source location
+            try (InputStream resourceStream = getClass().getResourceAsStream("/test.txt")) {
+                if (resourceStream != null) {
+                    Files.copy(resourceStream, sourcePath, StandardCopyOption.REPLACE_EXISTING);
+                    logger.info("Deployed test.txt from resources to: {}", sourcePath);
+                } else {
+                    // Fallback: create a default test.txt with "test" content
+                    Files.write(sourcePath, "test".getBytes(), StandardOpenOption.CREATE);
+                    logger.info("Created default test.txt at: {}", sourcePath);
+                }
             }
-            
-            // Append the content to the file
-            Files.write(targetFile, (content + System.lineSeparator()).getBytes(), 
-                       StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            
-            logger.info("Periodic write #{}: '{}' to file: {}", writeCounter, content, targetFile);
-            
-        } catch (IOException e) {
-            logger.error("Error during periodic file writing: {}", e.getMessage(), e);
+        } else {
+            logger.info("Source file already exists: {}", sourcePath);
         }
     }
+    
+
 }
