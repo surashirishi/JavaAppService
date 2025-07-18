@@ -1,0 +1,34 @@
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Maven
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~
+
+# Local environment files
+.env
+.env.local
