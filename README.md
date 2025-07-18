@@ -1,10 +1,10 @@
 # JavaAppService
 
-A simple Java application for Azure App Service that copies a file to a local directory and outputs its contents to logs.
+A simple Java application for Azure App Service that copies a file from the deployed location to a local directory and outputs its contents to logs.
 
 ## Features
 
-- **File Copy Operation**: Copies "test.txt" file with content "test" to `%SystemDrive%\local` directory
+- **File Copy Operation**: Copies "test.txt" file from `%HOME%\site\wwwroot` to `%SystemDrive%\local` directory
 - **Content Logging**: Reads and outputs the file contents to application logs
 - **REST API**: Exposes HTTP endpoints for triggering file operations
 - **App Service Ready**: Configured for Windows OS App Service deployment
@@ -60,10 +60,11 @@ A simple Java application for Azure App Service that copies a file to a local di
 
 The application performs the following operations when `/copy-file` is called:
 
-1. **Directory Creation**: Creates `%SystemDrive%\local` directory if it doesn't exist
-2. **File Writing**: Writes "test" content to `%SystemDrive%\local\test.txt`
-3. **File Reading**: Reads the file content back and logs it
-4. **Logging**: All operations are logged with INFO level
+1. **Source File Preparation**: Ensures `test.txt` exists in `%HOME%\site\wwwroot` directory (deploys from resources if needed)
+2. **Directory Creation**: Creates `%SystemDrive%\local` directory if it doesn't exist
+3. **File Copy**: Copies `%HOME%\site\wwwroot\test.txt` to `%SystemDrive%\local\test.txt`
+4. **File Reading**: Reads the copied file content and logs it
+5. **Logging**: All operations are logged with INFO level
 
 ## Logging
 
